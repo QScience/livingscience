@@ -1,0 +1,4 @@
+<?php
+function livingscience_enable() {
+	drupal_set_message($message = t('Living Science module is now enabled. In order to make use of it please configure the field names for your users first and last names, or for the full name in case you don&#39;t have separate fields for the first and the last names'), $type = 'status');
+}

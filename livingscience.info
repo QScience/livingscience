@@ -1,0 +1,10 @@
+name = Living Science
+description = Adds livingscience search functions to your website (http://www.livingscience.ethz.ch).
+core = 7.x
+configure = admin/config/media/livingscience
+
+version = "7.x-1.x-dev"
+project = "visualscience"
+package = "VisualScience"
+dependencies[] = visualscience
+dependencies[] = user_list

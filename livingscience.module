@@ -1,0 +1,129 @@
+<?php
+// $Id: user_list.module,v 1.19.2.2 2008/12/31 16:25:08 cyu Exp $
+
+/**
+ * @file
+ * This modules adds Living Science search functionality to the website. This is an addon to visualscience module which allows
+ * to visualize the publications of the selected user(s) via livingscience (http://www.livingscience.ethz.ch)
+ */
+
+/**
+ * Implementation of hook_menu() for livingscience
+ */
+function livingscience_menu() {
+  // The Url to realod the searchform on the original page
+  $items['livingscience/get_author_names'] = array(
+    'title' => 'Living Science Author Names',
+    'page callback' => 'livingscience_get_author_names',
+    'access arguments' => array('access visualscience'),
+    'type' => MENU_CALLBACK,
+  );  
+  
+  $items['admin/config/media/livingscience'] = array(
+    'title' => 'Living Science',
+    'description' => 'Configuration for the Living Science module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('livingscience_config_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  return $items;
+}
+/**
+ * 
+ * The configuration form for the living science which allows users to set the names
+ * of the user fields to be used to get the name of the author
+ * @param array $form
+ * @param array $form_state
+ */
+function livingscience_config_form($form, &$form_state) {
+  $form['livingscience_first_name'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('livingscience_first_name', ''),
+    '#title' => t('The name of the field to be used as the FIRST NAME of the author'),
+    '#required' => FALSE,
+  );
+
+  $form['livingscience_last_name'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('livingscience_last_name', ''),
+    '#title' => t('The name of the field to be used as the LAST NAME of the author'),
+    '#required' => FALSE,
+  );
+
+  $form['livingscience_full_name'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('livingscience_full_name', ''),
+    '#title' => t('The name of the field to be used as the FULL NAME of the author. If not empty, the first and last name fields will be ignored.'),
+    '#required' => FALSE,
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * livingscience_config_form_validate
+ * The validatoin function for the Living Science Configuration Form
+ * @param array $form the form being validated
+ * @param array $form_state the form_state variable associated with the given form
+ */
+function livingscience_config_form_validate($form, &$form_state) {
+	if (strlen(trim($form_state['values']['livingscience_first_name'])) == 0 &&
+	strlen(trim($form_state['values']['livingscience_last_name'])) == 0 &&
+	strlen(trim($form_state['values']['livingscience_full_name'])) == 0)
+	{
+		form_set_error('', t('Please fill in at least one of the fields.'));
+	}
+}
+
+/**
+ * 
+ * Implementation of hook_science_button()
+ * 
+ * Returns HTML of the button which should invoke livingscience
+ * @param string $idSuffix the number of the current search dialog
+ */
+function livingscience_science_button($idSuffix) {
+  drupal_add_js('http://livingscience.ethz.ch/livingscience/livingscience/livingscience.nocache.js', 'external');
+  drupal_add_js(drupal_get_path('module', 'livingscience') .'/livingscience.js');
+  
+  // TODO this should probably be added to the libraries just like for opentok, check this out
+  drupal_add_js(drupal_get_path('module', 'visualscience') .'/visualscience.jquery.layout.js');
+  drupal_add_js(drupal_get_path('module', 'visualscience') .'/visualscience.js');
+  drupal_add_js(drupal_get_path('module', 'visualscience') .'/visualscience.jquery.dialog-extend.js');
+  
+  return array('livingscience' => array("id_prefix" => "ls-map-btn-", "onclick" => "lsMapOpen(this); return false;", "class" => "ls-map-btn", "value" => "Living Science"));
+}
+
+
+function livingscience_get_author_names($uids = '') {
+	$uid_array = explode("_", $uids);
+	$authors = array();
+	foreach ($uid_array as $uid) {
+		$authors[] = user_load($uid);
+	}
+	
+	// Creating coma separated list of user emails
+	$authorNames = "";
+	$authorNamesArray = array();
+	if (strlen(trim(variable_get('livingscience_full_name', ''))) == 0) {
+		// Full name field not set
+		foreach ($authors as $author) {
+			$firstnamefield = "field_".variable_get('livingscience_first_name','');
+			$lastnamefield = "field_".variable_get('livingscience_last_name','');
+			$firstnameArray = $author->$firstnamefield;
+			$lastnameArray = $author->$lastnamefield;
+			$authorNamesArray[] = $firstnameArray[LANGUAGE_NONE][0]['value']." ".$lastnameArray[LANGUAGE_NONE][0]['value'];
+		}
+	} else {
+		// Full name field set
+		foreach ($authors as $author) {
+			$fullnamefield = "field_".variable_get('livingscience_full_name','');
+			$fullNameArray = $author->$fullnamefield;
+			$authorNamesArray[] = $fullNameArray[LANGUAGE_NONE][0]['value'];
+		}	
+	}
+//	$authorNames = substr_replace($authorNames, "", -1);		
+	drupal_json_output($authorNamesArray);
+//	return $authorNames;
+}
