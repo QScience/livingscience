@@ -28,6 +28,12 @@ function livingscience_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   
+  $items['livingscience/fields/autocomplete'] = array(   
+    'page callback' => 'fields_autocomplete',
+    'access arguments' => array('access visualscience'),
+    'type' => MENU_CALLBACK,
+  ); 
+  
   return $items;
 }
 /**
@@ -42,6 +48,7 @@ function livingscience_config_form($form, &$form_state) {
     '#type' => 'textfield',
     '#default_value' => variable_get('livingscience_first_name', ''),
     '#title' => t('The name of the field to be used as the FIRST NAME of the author'),
+   	'#autocomplete_path' => 'livingscience/fields/autocomplete', 
     '#required' => FALSE,
   );
 
@@ -49,14 +56,16 @@ function livingscience_config_form($form, &$form_state) {
     '#type' => 'textfield',
     '#default_value' => variable_get('livingscience_last_name', ''),
     '#title' => t('The name of the field to be used as the LAST NAME of the author'),
-    '#required' => FALSE,
+   	'#autocomplete_path' => 'livingscience/fields/autocomplete', 
+  	'#required' => FALSE,
   );
 
   $form['livingscience_full_name'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('livingscience_full_name', ''),
     '#title' => t('The name of the field to be used as the FULL NAME of the author. If not empty, the first and last name fields will be ignored.'),
-    '#required' => FALSE,
+   	'#autocomplete_path' => 'livingscience/fields/autocomplete', 
+  	'#required' => FALSE,
   );
   return system_settings_form($form);
 }
@@ -109,8 +118,8 @@ function livingscience_get_author_names($uids = '') {
 	if (strlen(trim(variable_get('livingscience_full_name', ''))) == 0) {
 		// Full name field not set
 		foreach ($authors as $author) {
-			$firstnamefield = "field_".variable_get('livingscience_first_name','');
-			$lastnamefield = "field_".variable_get('livingscience_last_name','');
+			$firstnamefield = variable_get('livingscience_first_name','');
+			$lastnamefield = variable_get('livingscience_last_name','');
 			$firstnameArray = $author->$firstnamefield;
 			$lastnameArray = $author->$lastnamefield;
 			$authorNamesArray[] = $firstnameArray[LANGUAGE_NONE][0]['value']." ".$lastnameArray[LANGUAGE_NONE][0]['value'];
@@ -118,7 +127,7 @@ function livingscience_get_author_names($uids = '') {
 	} else {
 		// Full name field set
 		foreach ($authors as $author) {
-			$fullnamefield = "field_".variable_get('livingscience_full_name','');
+			$fullnamefield = variable_get('livingscience_full_name','');
 			$fullNameArray = $author->$fullnamefield;
 			$authorNamesArray[] = $fullNameArray[LANGUAGE_NONE][0]['value'];
 		}	
@@ -126,4 +135,30 @@ function livingscience_get_author_names($uids = '') {
 //	$authorNames = substr_replace($authorNames, "", -1);		
 	drupal_json_output($authorNamesArray);
 //	return $authorNames;
+}
+
+/**
+ * The function to autocomplete on fields
+ * @param term the string typed into the textfield
+ */
+function fields_autocomplete($term) {
+  $matches = array();
+ 
+  // Some fantasy DB table which holds cities
+  $query = db_select('field_config', 'fc');
+
+  // Select rows that match the string
+  $return = $query
+    ->fields('fc', array('field_name'))
+    ->condition('fc.field_name', '%' . db_like($term) . '%', 'LIKE')
+    ->range(0, 10)
+    ->execute();
+ 
+  // add matches to $matches 
+  foreach ($return as $row) {
+    $matches[$row->field_name] = check_plain($row->field_name);
+  }
+ 
+  // return for JS
+  drupal_json_output($matches);	
 }
