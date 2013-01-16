@@ -94,11 +94,11 @@ function livingscience_config_form_validate($form, &$form_state) {
  */
 function livingscience_science_button($idSuffix) {
   drupal_add_js('http://livingscience.ethz.ch/livingscience/livingscience/livingscience.nocache.js', 'external');
-  drupal_add_js(drupal_get_path('module', 'livingscience') .'/livingscience.js');
+  //drupal_add_js(drupal_get_path('module', 'livingscience') .'/livingscience.js');
   
   // TODO this should probably be added to the libraries just like for opentok, check this out
-  drupal_add_js(drupal_get_path('module', 'visualscience') .'/js/visualscience.jquery.layout.js');
-  drupal_add_js(drupal_get_path('module', 'visualscience') .'/js/visualscience.js');
+  //drupal_add_js(drupal_get_path('module', 'visualscience') .'/js/visualscience.jquery.layout.js');
+  //drupal_add_js(drupal_get_path('module', 'visualscience') .'/js/visualscience.js');
   
   return array('livingscience' => array("id_prefix" => "ls-map-btn-", "onclick" => "lsMapOpen(this); return false;", "class" => "ls-map-btn", "value" => "Living Science"));
 }
