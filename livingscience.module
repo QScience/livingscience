@@ -97,8 +97,8 @@ function livingscience_science_button($idSuffix) {
   drupal_add_js(drupal_get_path('module', 'livingscience') .'/livingscience.js');
   
   // TODO this should probably be added to the libraries just like for opentok, check this out
-  drupal_add_js(drupal_get_path('module', 'visualscience') .'/visualscience.jquery.layout.js');
-  drupal_add_js(drupal_get_path('module', 'visualscience') .'/visualscience.js');
+  drupal_add_js(drupal_get_path('module', 'visualscience') .'/javascript/lib/visualscience.jquery.layout.js');
+  drupal_add_js(drupal_get_path('module', 'visualscience') .'/javascript/visualscience.userlist.js');
   
   return array('livingscience' => array("id_prefix" => "ls-map-btn-", "onclick" => "lsMapOpen(this); return false;", "class" => "ls-map-btn", "value" => "Living Science"));
 }
